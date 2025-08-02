@@ -295,3 +295,7 @@ If you have any questions or need help:
 ---
 
 **Made using Next.js, Firebase, and TypeScript** 
+=======
+# Social_Sphere
+A mini linkedIn type app
+>>>>>>> 96b1259d3a33bfb24021acfc65b5b768fc7ad38b
