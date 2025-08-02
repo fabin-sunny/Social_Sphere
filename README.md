@@ -143,12 +143,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### **Test Account 1**
 - **Email**: `fabin@gmail.com`
 - **Password**: `12345678`
-- **Name**: Demo User
+- **Name**: Fabin Sunny
 
 ### **Test Account 2**
 - **Email**: `test@gmail.com`
 - **Password**: `1234567`
-- **Name**: Test User
+- **Name**: Test
 
 ### **Creating New Accounts**
 1. Click "Sign Up" on the landing page
@@ -299,3 +299,4 @@ If you have any questions or need help:
 # Social_Sphere
 A mini linkedIn type app
 >>>>>>> 96b1259d3a33bfb24021acfc65b5b768fc7ad38b
+
