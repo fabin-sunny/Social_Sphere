@@ -236,7 +236,7 @@ mini_lin/
 - **Transitions**: Smooth 300ms transitions
 - **Loading States**: Skeleton screens and spinners
 - **Micro-interactions**: Button feedback and form validation
-```
+
 
 ### **Environment Variables**
 Make sure to set these in your deployment platform:
@@ -294,9 +294,5 @@ If you have any questions or need help:
 
 ---
 
-**Made using Next.js, Firebase, and TypeScript** 
-=======
-# Social_Sphere
-A mini linkedIn type app
->>>>>>> 96b1259d3a33bfb24021acfc65b5b768fc7ad38b
+
 
