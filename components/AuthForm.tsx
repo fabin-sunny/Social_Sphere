@@ -89,8 +89,13 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
       if (isLogin) {
         await signIn(data.email, data.password);
       } else {
-        await signUp(data.email, data.password, data.name || 'User', data.bio || '');
-      }
+const signupData = data as SignupFormData;
+  await signUp(
+    signupData.email,
+    signupData.password,
+    signupData.name || 'User',
+    signupData.bio || ''
+  );      }
       
       onSuccess();
     } catch (err: any) {
