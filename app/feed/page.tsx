@@ -28,9 +28,29 @@ export default function FeedPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const profile = await getUserProfile(firebaseUser.uid);
-        setUser(profile);
-        setupRealtimePosts();
+        try {
+          const profile = await getUserProfile(firebaseUser.uid);
+          
+          if (profile) {
+            setUser(profile);
+            setupRealtimePosts();
+          } else {
+            // If profile doesn't exist, create a basic one
+            const basicProfile: UserProfile = {
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: firebaseUser.displayName || 'User',
+              bio: '',
+              createdAt: new Date()
+            };
+            setUser(basicProfile);
+            setupRealtimePosts();
+          }
+        } catch (error) {
+          console.error('Error getting user profile:', error);
+          setUser(null);
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setLoading(false);

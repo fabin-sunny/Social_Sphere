@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,14 +12,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { signUp, signIn } from '@/lib/auth';
 import { Loader2, Eye, EyeOff, Sparkles, Users, TrendingUp, MessageCircle } from 'lucide-react';
 
-const authSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+});
+
+const signupSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
   bio: z.string().max(160, 'Bio must be less than 160 characters').optional(),
 });
 
-type AuthFormData = z.infer<typeof authSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
+type SignupFormData = z.infer<typeof signupSchema>;
+type AuthFormData = LoginFormData | SignupFormData;
 
 interface AuthFormProps {
   onSuccess: () => void;
@@ -55,7 +62,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
   const [error, setError] = useState('');
 
   const form = useForm<AuthFormData>({
-    resolver: zodResolver(authSchema),
+    resolver: zodResolver(isLogin ? loginSchema : signupSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -63,6 +70,16 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
       bio: '',
     },
   });
+
+  // Reset form when switching between login and signup
+  useEffect(() => {
+    form.reset({
+      email: '',
+      password: '',
+      name: '',
+      bio: '',
+    });
+  }, [isLogin, form]);
 
   const onSubmit = async (data: AuthFormData) => {
     setIsLoading(true);
@@ -72,11 +89,33 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
       if (isLogin) {
         await signIn(data.email, data.password);
       } else {
-        await signUp(data.email, data.password, data.name!, data.bio!);
+        await signUp(data.email, data.password, data.name || 'User', data.bio || '');
       }
+      
       onSuccess();
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      console.error('Authentication error:', err);
+      
+      // Handle specific Firebase auth errors
+      let errorMessage = 'An error occurred during authentication';
+      
+      if (err.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email. Please sign up instead.';
+      } else if (err.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'Password should be at least 6 characters long.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'An account with this email already exists. Please sign in instead.';
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -154,7 +193,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 {!isLogin && (
                   <FormField
                     control={form.control}
@@ -250,11 +289,43 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                 )}
 
                 {error && (
-                  <div className="text-sm text-red-600 bg-red-50 p-4 rounded-lg border border-red-200 flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0"></div>
-                    <span>{error}</span>
+                  <div className="text-sm text-red-600 bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-red-500 rounded-full flex-shrink-0 mt-0.5"></div>
+                      <div className="flex-1">
+                        <span>{error}</span>
+                        {error.includes('No account found') && (
+                          <div className="mt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsLogin(false)}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              Create Account Instead
+                            </Button>
+                          </div>
+                        )}
+                        {error.includes('already exists') && (
+                          <div className="mt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setIsLogin(true)}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              Sign In Instead
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
+
+
 
                 <Button 
                   type="submit" 

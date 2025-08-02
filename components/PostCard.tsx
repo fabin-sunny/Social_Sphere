@@ -116,10 +116,14 @@ export default function PostCard({ post, currentUser, onPostUpdate }: PostCardPr
   const loadComments = async () => {
     if (!showComments) {
       try {
+        console.log('Loading comments for post:', post.id);
         const fetchedComments = await getComments(post.id);
+        console.log('Fetched comments:', fetchedComments);
         setComments(fetchedComments);
       } catch (error) {
         console.error('Error loading comments:', error);
+        // Show user-friendly error
+        alert('Unable to load comments. Please try again.');
       }
     }
     setShowComments(!showComments);
@@ -255,7 +259,10 @@ export default function PostCard({ post, currentUser, onPostUpdate }: PostCardPr
             <Button
               variant="ghost"
               size="sm"
-              onClick={loadComments}
+              onClick={() => {
+                console.log('Comment button clicked for post:', post.id);
+                loadComments();
+              }}
               className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
             >
               <MessageCircle className="w-4 h-4 mr-2" />

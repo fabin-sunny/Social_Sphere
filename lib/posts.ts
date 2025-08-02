@@ -210,6 +210,7 @@ export const addComment = async (postId: string, content: string, authorId: stri
 
 export const getComments = async (postId: string): Promise<Comment[]> => {
   try {
+    console.log('Getting comments for postId:', postId);
     const q = query(
       collection(db, 'comments'),
       where('postId', '==', postId),
@@ -217,35 +218,47 @@ export const getComments = async (postId: string): Promise<Comment[]> => {
     );
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => {
+    const comments = querySnapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
         ...convertTimestampToDate(data)
       } as Comment;
     });
+    
+    console.log('Successfully fetched comments:', comments.length);
+    return comments;
   } catch (error: any) {
+    console.error('Error in getComments:', error);
     // If index doesn't exist, fall back to simple query and sort in memory
     if (error.code === 'failed-precondition' || error.code === 'unimplemented') {
       console.log('Index not found, using fallback query');
-      const q = query(
-        collection(db, 'comments'),
-        where('postId', '==', postId)
-      );
-      const querySnapshot = await getDocs(q);
-      
-      const comments = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...convertTimestampToDate(data)
-        } as Comment;
-      });
-      
-      // Sort in memory
-      return comments.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      try {
+        const q = query(
+          collection(db, 'comments'),
+          where('postId', '==', postId)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        const comments = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...convertTimestampToDate(data)
+          } as Comment;
+        });
+        
+        // Sort in memory
+        const sortedComments = comments.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
+        console.log('Fallback query successful, comments:', sortedComments.length);
+        return sortedComments;
+      } catch (fallbackError) {
+        console.error('Fallback query also failed:', fallbackError);
+        throw fallbackError;
+      }
     }
     throw error;
   }
